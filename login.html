@@ -117,10 +117,10 @@
                 event.preventDefault(); // Prevent form submission
 
                 var formData = $(this).serialize(); // Serialize form data
-
+                const API = 'https://b04psjyth8.execute-api.us-east-1.amazonaws.com/default/login';
                 $.ajax({
                     type: 'GET',
-                    url: 'https://yceox2doj7.execute-api.us-east-1.amazonaws.com/default/login',
+                    url: API,
                     data: formData,
                     dataType: 'json', // Specify the expected data type
                     success: function (response) {
@@ -131,7 +131,7 @@
                             localStorage.setItem('user_name', response.user_name);
 
                             // Redirect to dashboard page
-                            window.location.href = '/dashboard';
+                            window.location.href = "dashboard.html";
                         } else {
                             alert("Email or password is invalid");
                         }
