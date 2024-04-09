@@ -227,17 +227,26 @@
 
         // Function to unsubscribe from a music title
         function unsubscribe(title) {
-            // Get subscribed music titles from local storage
-            let subscribedMusicTitles = JSON.parse(localStorage.getItem('subscribed_music_titles')) || [];
-
-            // Remove the selected title from the subscribed list
-            subscribedMusicTitles = subscribedMusicTitles.filter(t => t !== title);
-
-            // Update local storage with the modified list
-            localStorage.setItem('subscribed_music_titles', JSON.stringify(subscribedMusicTitles));
-
-            // Refresh subscription display
-            displaySubscriptions();
+            // Construct JSON data for the request body
+            const requestData = {
+                email: userEmail,
+                title: title
+            };
+            console.log(requestData)
+            // Make a PUT request to the API to subscribe to the music title
+            fetch('https://r85t3kyct9.execute-api.us-east-1.amazonaws.com/default/remove_music', {
+                method: 'PUT',
+                body: JSON.stringify(requestData)
+            })
+                .then(response => response.json())
+                .then(data => {
+                    // Update the subscribed music titles in local storage
+                    localStorage.setItem('subscribed_music_titles', JSON.stringify(data.music_titles));
+                    console.log('Subscribed music titles:', data.music_titles);
+                    // Refresh subscription display
+                    displaySubscriptions();
+                })
+                .catch(error => console.error('Error:', error));
         }
 
         // Function to query music data
