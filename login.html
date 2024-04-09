@@ -113,42 +113,58 @@
 
     <script>
         $(document).ready(function () {
-            $('.signupbtn').click(function () {
-                // Redirect to signup.html
-                window.location.href = "signup.html";
-            });
+                $('.signupbtn').click(function () {
+                    // Redirect to signup.html
+                    window.location.href = "signup.html";
+                });
 
-            $('#loginForm').submit(function (event) {
-                event.preventDefault(); // Prevent form submission
+                $('#loginForm').submit(function (event) {
+                    event.preventDefault(); // Prevent form submission
 
-                var formData = $(this).serialize(); // Serialize form data
-                const API = 'https://0fqda5mew7.execute-api.us-east-1.amazonaws.com/default/login';
-                $.ajax({
-                    type: 'GET',
-                    url: API,
-                    data: formData,
-                    dataType: 'json', // Specify the expected data type
-                    success: function (response) {
-                        // If login is successful, set email and user_name to local storage
-                        if (response.email && response.user_name) {
-                            // Set email and user_name to local storage
-                            localStorage.setItem('email', response.email);
-                            localStorage.setItem('user_name', response.user_name);
+                    var formData = $(this).serialize(); // Serialize form data
+                    const API = 'https://0fqda5mew7.execute-api.us-east-1.amazonaws.com/default/login';
+                    $.ajax({
+                        type: 'GET',
+                        url: API,
+                        data: formData,
+                        dataType: 'json', // Specify the expected data type
+                        success: function (response) {
+                            // If login is successful, set email and user_name to local storage
+                            if (response.email && response.user_name) {
+                                // Set email and user_name to local storage
+                                localStorage.setItem('email', response.email);
+                                localStorage.setItem('user_name', response.user_name);
 
-                            // Redirect to dashboard page
-                            window.location.href = "dashboard.html";
-                        } else {
-                            alert("Email or password is invalid");
+                                // Check if music_titles is an array and not empty
+                                if (Array.isArray(response.music_titles) && response.music_titles.length > 0) {
+                                    var musicTitlesArray = response.music_titles;
+
+                                    // Convert each element of the array to a JSON string
+                                    var formattedTitlesArray = musicTitlesArray.map(title => '"' + title + '"');
+
+                                    // Join the array elements into a single string
+                                    var formattedTitlesString = '[' + formattedTitlesArray.join(',') + ']';
+
+                                    // Set the formatted string to localStorage
+                                    localStorage.setItem('subscribed_music_titles', formattedTitlesString);
+                                } else {
+                                    console.error("Response music_titles is not a non-empty array:", response.music_titles);
+                                }
+                                // Redirect to dashboard page
+                                window.location.href = "dashboard.html";
+                            } else {
+                                alert("Email or password is invalid");
+                            }
+                        },
+                        error: function (xhr, status, error) {
+                            // If login fails, display error message
+                            console.log(xhr.responseText); // For demonstration purposes
+                            alert("An error occurred while processing your request. Please try again later.");
                         }
-                    },
-                    error: function (xhr, status, error) {
-                        // If login fails, display error message
-                        console.log(xhr.responseText); // For demonstration purposes
-                        alert("An error occurred while processing your request. Please try again later.");
-                    }
+                    });
                 });
             });
-        });
+
     </script>
 
 </body>
