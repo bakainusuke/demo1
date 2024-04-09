@@ -249,40 +249,52 @@
                 .catch(error => console.error('Error:', error));
         }
 
-        // Function to query music data
-        function queryMusic() {
-            var title = document.getElementById('title').value.trim();
-            var year = document.getElementById('year').value.trim();
-            var artist = document.getElementById('artist').value.trim();
+        /// Function to query music data
+            function queryMusic() {
+                var title = document.getElementById('title').value.trim();
+                var year = document.getElementById('year').value.trim();
+                var artist = document.getElementById('artist').value.trim();
 
-            // Make API call with query parameters
-            fetch(`https://yb1e7ki0o2.execute-api.us-east-1.amazonaws.com/default/music?title=${title}&year=${year}&artist=${artist}`)
-                .then(response => response.json())
-                .then(data => {
-                    if (data.length === 0) {
-                        alert("No result is retrieved. Please query again.");
-                    } else {
-                        // Clear previous results
-                        document.getElementById('musicResults').innerHTML = '';
+                // Make API call with query parameters
+                fetch(`https://yb1e7ki0o2.execute-api.us-east-1.amazonaws.com/default/music?title=${title}&year=${year}&artist=${artist}`)
+                    .then(response => {
+                        // Check the status code
+                        if (response.status === 400 || response.status === 404) {
+                            // Show alert if status code is 400 or 404
+                            alert("No result is retrieved. Please query again.");
+                        } else {
+                            // Proceed with parsing the JSON response
+                            return response.json();
+                        }
+                    })
+                    .then(data => {
+                        // If data is not undefined (i.e., response status is not 400 or 404)
+                        if (data) {
+                            if (data.length === 0) {
+                                alert("No result is retrieved. Please query again.");
+                            } else {
+                                // Clear previous results
+                                document.getElementById('musicResults').innerHTML = '';
 
-                        // Process retrieved music data
-                        data.forEach(music => {
-                            // Create elements for displaying music information
-                            var musicInfo = document.createElement('div');
-                            musicInfo.innerHTML = `
-                                <p>Title: ${music.title}</p>
-                                <p>Artist: ${music.artist}</p>
-                                <p>Year: ${music.year}</p>
-                                <button type="button" onclick="subscribe('${music.title}')">Subscribe</button>
-                            `;
+                                // Process retrieved music data
+                                data.forEach(music => {
+                                    // Create elements for displaying music information
+                                    var musicInfo = document.createElement('div');
+                                    musicInfo.innerHTML = `
+                            <p>Title: ${music.title}</p>
+                            <p>Artist: ${music.artist}</p>
+                            <p>Year: ${music.year}</p>
+                            <button type="button" onclick="subscribe('${music.title}')">Subscribe</button>
+                        `;
 
-                            // Append music information to the results container
-                            document.getElementById('musicResults').appendChild(musicInfo);
-                        });
-                    }
-                })
-                .catch(error => console.error('Error:', error));
-        }
+                                    // Append music information to the results container
+                                    document.getElementById('musicResults').appendChild(musicInfo);
+                                });
+                            }
+                        }
+                    })
+                    .catch(error => console.error('Error:', error));
+            }
 
         // Display subscribed music titles on page load
         displaySubscriptions();
