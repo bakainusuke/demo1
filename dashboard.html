@@ -5,7 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dashboard</title>
-
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <style>
         body {
             font-family: Arial, Helvetica, sans-serif;
@@ -53,6 +53,18 @@
             padding: 10px 18px;
             background-color: #f44336;
         }
+
+        .submitbtn {
+            width: auto;
+            padding: 10px 18px;
+            background-color: #134995;
+        }
+
+        .subscribe {
+            width: auto;
+            padding: 10px 18px;
+            background-color: #134995;
+        }
     
         .imgcontainer {
             text-align: center;
@@ -83,6 +95,10 @@
             .logoutbtn {
                 width: 100%;
             }
+
+            .submitbtn{
+                width: 100%;
+            }
         }
     </style>
 </head>
@@ -90,66 +106,124 @@
 <body>
     <h2>Dashboard</h2>
 
-    <p>Welcome, <span id="userName"></span>!</p>
-
     <button type="button" class="logoutbtn">Logout</button>
 
-    <form id="loginForm">
+    <form id="userForm">
         <h2>User</h2>
-    
         <div class="container">
-            <label for="email"><b>Email</b></label>
-            <input type="email" placeholder="Enter Email" name="email" required>
-    
-            <label for="password"><b>Password</b></label>
-            <input type="password" placeholder="Enter Password" name="password" required>
-    
-            
-    
+            <p>Welcome, <strong><span id="userName" style="font-size: larger;"></span></strong>!</p>
         </div>
-    
-        
     </form>
-    <form id="loginForm">
-        <h2>Subcription</h2>
-    
-        <div class="container">
-            <label for="email"><b>Email</b></label>
-            <input type="email" placeholder="Enter Email" name="email" required>
-    
-            <label for="password"><b>Password</b></label>
-            <input type="password" placeholder="Enter Password" name="password" required>
-    
-    
-    
-        </div>
-    
-    
-    </form>
-    <form id="loginForm">
-        <h2>Query</h2>
-    
-        <div class="container">
-            <label for="email"><b>Email</b></label>
-            <input type="email" placeholder="Enter Email" name="email" required>
-    
-            <label for="password"><b>Password</b></label>
-            <input type="password" placeholder="Enter Password" name="password" required>
-    
-    
-    
-        </div>
-    
-    
-    </form>
-    
-    <script>
-        // Retrieve user_name from local storage
-        var userName = localStorage.getItem('user_name');
-        // Set the user_name to the HTML element
-        document.getElementById('userName').innerText = userName;
-    </script>
 
+    <form id="subForm">
+        <h2>Subscription</h2>
+
+        <div class="container" id="subscriptionContainer">
+            <!-- Subscription content will be added dynamically -->
+        </div>
+    </form>
+
+    <form id="queryForm">
+        <h2>Query</h2>
+
+        <div class="container">
+            <label for="title"><b>Title</b></label>
+            <input type="text" placeholder="Enter Title" name="title" id="title">
+
+            <label for="year"><b>Year</b></label>
+            <input type="text" placeholder="Enter Year" name="year" id="year">
+
+            <label for="artist"><b>Artist</b></label>
+            <input type="text" placeholder="Enter Artist" name="artist" id="artist">
+            <div class="clearfix">
+                <button type="button" class="submitbtn" onclick="queryMusic()">Submit</button>
+            </div>
+        </div>
+    </form>
+
+    <!-- Music results container -->
+    <div id="musicResults"></div>
+
+    <script>
+        // Check if user data exists in local storage
+        const userName = localStorage.getItem('user_name');
+        const userEmail = localStorage.getItem('email');
+
+        if (!userName || !userEmail) {
+            // Redirect to login page if user data is missing
+            localStorage.clear();
+            window.location.href = "login.html";
+        } else {
+            // Set the user_name to the HTML element
+            document.getElementById('userName').innerText = userName;
+        }
+
+        // Event listener for the logout button
+        document.querySelector('.logoutbtn').addEventListener('click', function () {
+            // Remove all local storage data
+            localStorage.clear();
+            // Redirect to login.html
+            window.location.href = "login.html";
+        });
+        // Function to subscribe to a music title
+        function subscribe(title) {
+            // Construct JSON data for the request body
+            const requestData = {
+                email: userEmail,
+                title: title
+            };
+            console.log(requestData)
+            // Make a PUT request to the API to subscribe to the music title
+            fetch('https://yb1e7ki0o2.execute-api.us-east-1.amazonaws.com/default/music', {
+                method: 'PUT',
+                body: JSON.stringify(requestData)
+            })
+                .then(response => response.json())
+                .then(data => {
+                    // Update the subscribed music titles in local storage
+                    localStorage.setItem('subscribed_music_titles', JSON.stringify(data.music_titles));
+                    console.log('Subscribed music titles:', data.music_titles);
+                })
+                .catch(error => console.error('Error:', error));
+        }
+
+        // Function to query music data
+        function queryMusic() {
+            var title = document.getElementById('title').value.trim();
+            var year = document.getElementById('year').value.trim();
+            var artist = document.getElementById('artist').value.trim();
+
+            // Make API call with query parameters
+            fetch(`https://yb1e7ki0o2.execute-api.us-east-1.amazonaws.com/default/music?title=${title}&year=${year}&artist=${artist}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.length === 0) {
+                        alert("No result is retrieved. Please query again.");
+                    } else {
+                        // Clear previous results
+                        document.getElementById('musicResults').innerHTML = '';
+
+                        // Process retrieved music data
+                        data.forEach(music => {
+                            // Create elements for displaying music information
+                            var musicInfo = document.createElement('div');
+                            musicInfo.innerHTML = `
+                                <p>Title: ${music.title}</p>
+                                <p>Artist: ${music.artist}</p>
+                                <p>Year: ${music.year}</p>
+                                <button type="button" onclick="subscribe('${music.title}')">Subscribe</button>
+                            `;
+
+                            // Append music information to the results container
+                            document.getElementById('musicResults').appendChild(musicInfo);
+                        });
+                    }
+                })
+                .catch(error => console.error('Error:', error));
+        }
+
+        
+    </script>
 </body>
         
 </html>
