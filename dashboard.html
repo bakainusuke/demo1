@@ -165,6 +165,7 @@
             // Redirect to login.html
             window.location.href = "login.html";
         });
+
         // Function to subscribe to a music title
         function subscribe(title) {
             // Construct JSON data for the request body
@@ -183,8 +184,60 @@
                     // Update the subscribed music titles in local storage
                     localStorage.setItem('subscribed_music_titles', JSON.stringify(data.music_titles));
                     console.log('Subscribed music titles:', data.music_titles);
+                    // Refresh subscription display
+                    displaySubscriptions();
                 })
                 .catch(error => console.error('Error:', error));
+        }
+
+        // Function to display subscribed music titles
+        async function displaySubscriptions() {
+                const subscriptionContainer = document.getElementById('subscriptionContainer');
+                subscriptionContainer.innerHTML = ''; // Clear previous content
+
+                // Get subscribed music titles from local storage
+                const subscribedMusicTitles = JSON.parse(localStorage.getItem('subscribed_music_titles')) || [];
+
+                // Fetch details for each subscribed title from the API
+                const promises = subscribedMusicTitles.map(title => {
+                    return fetch(`https://yb1e7ki0o2.execute-api.us-east-1.amazonaws.com/default/music?title=${title}`)
+                        .then(response => response.json());
+                });
+
+                // Wait for all API requests to resolve
+                const responses = await Promise.all(promises);
+
+                // Display details for each subscribed title
+                responses.forEach((data, index) => {
+                    if (data.length > 0) {
+                        const music = data[0]; // Assuming the API returns a single matching result
+                        // Create elements for displaying subscription information
+                        const subscriptionInfo = document.createElement('div');
+                        subscriptionInfo.innerHTML = `
+                <p>Title: ${music.title}</p>
+                <p>Artist: ${music.artist}</p>
+                <p>Year: ${music.year}</p>
+                <button type="button" onclick="unsubscribe('${music.title}')">Remove</button>
+            `;
+                        // Append subscription information to the subscription container
+                        subscriptionContainer.appendChild(subscriptionInfo);
+                    }
+                });
+            }
+
+        // Function to unsubscribe from a music title
+        function unsubscribe(title) {
+            // Get subscribed music titles from local storage
+            let subscribedMusicTitles = JSON.parse(localStorage.getItem('subscribed_music_titles')) || [];
+
+            // Remove the selected title from the subscribed list
+            subscribedMusicTitles = subscribedMusicTitles.filter(t => t !== title);
+
+            // Update local storage with the modified list
+            localStorage.setItem('subscribed_music_titles', JSON.stringify(subscribedMusicTitles));
+
+            // Refresh subscription display
+            displaySubscriptions();
         }
 
         // Function to query music data
@@ -222,7 +275,8 @@
                 .catch(error => console.error('Error:', error));
         }
 
-        
+        // Display subscribed music titles on page load
+        displaySubscriptions();
     </script>
 </body>
         
